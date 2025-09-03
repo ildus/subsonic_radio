@@ -5,9 +5,5 @@ services:
       dockerfile: Dockerfile
     restart: unless-stopped
     env_file: radio.env
-    environment:
-      - SUBSONIC_SERVER_URL=$SUBSONIC_SERVER_URL
-      - SUBSONIC_USERNAME=$SUBSONIC_USERNAME
-      - SUBSONIC_PASSWORD=$SUBSONIC_PASSWORD
     volumes:
       - ./music:/music

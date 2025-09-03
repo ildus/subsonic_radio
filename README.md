@@ -28,12 +28,22 @@ Optional variables (with defaults):
 * `OUTPUT_GID` = 1000
 * `SUBSONIC_PLAYLIST` = Radio - the playlist with desired radio songs.
 
+Create a `compose.yaml` file:
+
+    services:
+      radio:
+        image: ghcr.io/ildus/subsonic_radio:main
+        restart: unless-stopped
+        env_file: radio.env
+        volumes:
+          - <navidrome music folder>:/music
+
+
 Now create a playlist in Navidrome with name like in SUBSONIC_PLAYLIST and
 add a song to it.
 
-Running:
+Start the container:
 
-    docker compose build
     docker compose up -d
 
 Check the logs:
