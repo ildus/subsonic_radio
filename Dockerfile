@@ -1,5 +1,5 @@
 FROM python:3-alpine
-RUN apk add yt-dlp ffmpeg \
+RUN apk add yt-dlp ffmpeg rsync \
   && python3 -m pip install ytmusicapi py-sonic
 ENV PYTHONUNBUFFERED=1
 RUN mkdir /app && chmod a+rwx /app

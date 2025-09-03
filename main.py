@@ -67,6 +67,7 @@ def download_similar_songs(playlist_title, song: dict):
         return
 
     sp.run(f"mkdir -p {folder_title}", shell=True)
+    sp.run(f"chmod a+rwx {folder_title}", shell=True)
 
     playlist_fn = f"{playlist_title}.m3u"
     sp.run(f"touch {folder_title}/'{playlist_fn}'", shell=True)
@@ -105,6 +106,7 @@ def download_similar_songs(playlist_title, song: dict):
                 print(f"could not determine filename from: {out}")
 
             result_fn = m.group(1).replace("'", "\\'")
+            sp.check_output(f"chmod a+r '{result_fn}'", shell=True)
             sp.check_output(f"mv '{result_fn}' {folder_title}/'{fn}'", shell=True)
             result_fn = fn
 
@@ -112,10 +114,16 @@ def download_similar_songs(playlist_title, song: dict):
                 f.write(result_fn)
                 f.write("\n")
 
-            print(result_fn)
+            print("*", result_fn)
             count += 1
             at_least_one = True
             downloaded.add(similar["id"])
+
+            out = sp.check_output(
+                f"rsync -av --owner --group --chown {UID}:{GID} {folder_title} {OUTPUT_LOCATION}/",
+                shell=True,
+            )
+            print(out.decode("utf8"))
 
             if count > OUTPUT_COUNT:
                 done = True
@@ -124,12 +132,6 @@ def download_similar_songs(playlist_title, song: dict):
         if not at_least_one:
             print("Youtube started to return same songs, exiting...")
             break
-
-    if count > 0:
-        sp.check_output(f"mv {folder_title} {OUTPUT_LOCATION}/", shell=True)
-        sp.check_output(
-            f"chown -R {UID}:{GID} {OUTPUT_LOCATION}/{folder_title}", shell=True
-        )
 
 
 def get_radio_playlist(server_url, username, password):
