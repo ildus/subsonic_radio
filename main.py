@@ -3,7 +3,6 @@
 import sys
 import yt
 import re
-import string
 import os
 import subprocess as sp
 import time
@@ -14,6 +13,7 @@ SUBSONIC_SERVER_URL = os.environ["SUBSONIC_SERVER_URL"]
 SUBSONIC_USERNAME = os.environ["SUBSONIC_USERNAME"]
 SUBSONIC_PASSWORD = os.environ["SUBSONIC_PASSWORD"]
 OUTPUT_LOCATION = os.environ.get("OUTPUT_LOCATION", "/music")
+OUTPUT_COUNT = int(os.environ.get("OUTPUT_COUNT", "50"))
 UID = os.environ.get("OUTPUT_UID", "1000")
 GID = os.environ.get("OUTPUT_GID", "1000")
 SUBSONIC_PLAYLIST = os.environ.get("SUBSONIC_PLAYLIST", "Radio")
@@ -117,12 +117,12 @@ def download_similar_songs(playlist_title, song: dict):
             at_least_one = True
             downloaded.add(similar["id"])
 
-            if count > 1:
+            if count > OUTPUT_COUNT:
                 done = True
                 break
 
         if not at_least_one:
-            print("Youtube started to return same, exiting...")
+            print("Youtube started to return same songs, exiting...")
             break
 
     if count > 0:

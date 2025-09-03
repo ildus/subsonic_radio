@@ -4,6 +4,7 @@ services:
       context: .
       dockerfile: Dockerfile
     restart: unless-stopped
+    env_file: radio.env
     environment:
       - SUBSONIC_SERVER_URL=$SUBSONIC_SERVER_URL
       - SUBSONIC_USERNAME=$SUBSONIC_USERNAME
