@@ -1,0 +1,12 @@
+services:
+  subsonic_radio:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    restart: unless-stopped
+    environment:
+      - SUBSONIC_SERVER_URL=$SUBSONIC_SERVER_URL
+      - SUBSONIC_USERNAME=$SUBSONIC_USERNAME
+      - SUBSONIC_PASSWORD=$SUBSONIC_PASSWORD
+    volumes:
+      - ./music:/music
