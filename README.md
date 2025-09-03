@@ -1,8 +1,8 @@
 Navidrome (Subsonic) radio (based on Youtube)
 ---------------------------------------------
 
-Idea - add a song to Radio playlist. Then scan song from it and for each song
-create a radio playlist (playlist takes the name of the original song) with
+Idea - add a song to Radio playlist. In real time scan songs from it and for each song
+create a radio playlist (playlist takes the name of the original song) from
 Youtube recommendations.
 
 The created playlist will appear in Navidrome and can be played like
