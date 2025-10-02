@@ -16,9 +16,9 @@ Getting started (docker based)
 
 First, create `radio.env` file with following variables:
 
-    SUBSONIC_SERVER_URL = "https://music.example.com"
-    SUBSONIC_USERNAME = "<username>"
-    SUBSONIC_PASSWORD = "<password>"
+    SUBSONIC_SERVER_URL="https://music.example.com"
+    SUBSONIC_USERNAME="<username>"
+    SUBSONIC_PASSWORD="<password>"
 
 Optional variables (with defaults):
 

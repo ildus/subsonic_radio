@@ -105,7 +105,7 @@ def download_similar_songs(playlist_title, song: dict):
             if not m:
                 print(f"could not determine filename from: {out}")
 
-            result_fn = m.group(1).replace("'", "\\'")
+            result_fn = m.group(1).replace("'", "")
             sp.check_output(f"chmod a+r '{result_fn}'", shell=True)
             sp.check_output(f"mv '{result_fn}' {folder_title}/'{fn}'", shell=True)
             result_fn = fn
