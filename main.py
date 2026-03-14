@@ -4,9 +4,11 @@ import sys
 import yt
 import re
 import os
+import json
 import subprocess as sp
 import time
 import signal
+import urllib.request
 
 # --- USER CONFIGURATION ---
 SUBSONIC_SERVER_URL = os.environ["SUBSONIC_SERVER_URL"]
@@ -17,8 +19,13 @@ OUTPUT_COUNT = int(os.environ.get("OUTPUT_COUNT", "50"))
 UID = os.environ.get("OUTPUT_UID", "1000")
 GID = os.environ.get("OUTPUT_GID", "1000")
 SUBSONIC_PLAYLIST = os.environ.get("SUBSONIC_PLAYLIST", "Radio")
+DEEZER_USER_ID = os.environ.get("DEEZER_USER_ID", "")
+
+DEEZER_FAVS_FOLDER = "Deezer_Favs"
+DEEZER_FAVS_PLAYLIST = "Deezer Favs"
 
 complained_on = {}
+deezer_downloaded = set()
 
 
 class SignalCatcher:
@@ -134,6 +141,81 @@ def download_similar_songs(playlist_title, song: dict):
             break
 
 
+def get_deezer_favorites() -> list:
+    url = f"https://api.deezer.com/user/{DEEZER_USER_ID}/tracks?limit=100"
+    try:
+        with urllib.request.urlopen(url, timeout=15) as resp:
+            data = json.loads(resp.read())
+        return data.get("data", [])
+    except Exception as e:
+        print(f"Failed to fetch Deezer favorites: {e}")
+        return []
+
+
+def sync_deezer_favs():
+    if not DEEZER_USER_ID:
+        return
+
+    tracks = get_deezer_favorites()
+    if not tracks:
+        return
+
+    folder = os.path.join(OUTPUT_LOCATION, DEEZER_FAVS_FOLDER)
+    playlist_fn = f"{DEEZER_FAVS_PLAYLIST}.m3u"
+    sp.run(f"mkdir -p '{folder}'", shell=True)
+    sp.run(f"chmod a+rwx '{folder}'", shell=True)
+    sp.run(f"touch '{folder}/{playlist_fn}'", shell=True)
+
+    for track in tracks:
+        track_id = str(track["id"])
+        if track_id in deezer_downloaded:
+            continue
+
+        artist = track.get("artist", {}).get("name", "")
+        title = track.get("title", "")
+        query = f"{artist} {title}"
+
+        results = yt.search(query)
+        if not results:
+            print(f"[Deezer Favs] nothing found for: {query}")
+            deezer_downloaded.add(track_id)
+            continue
+
+        song = results[0]
+        fn = get_valid_filename(f"{song['author']} - {song['title']}.opus")
+        dest_path = os.path.join(folder, fn)
+
+        if os.path.exists(dest_path):
+            deezer_downloaded.add(track_id)
+            continue
+
+        try:
+            out = sp.check_output(
+                f"yt-dlp -x --no-warnings --embed-metadata https://music.youtube.com/watch?v={song['id']}",
+                shell=True,
+            ).decode("utf8")
+        except Exception as e:
+            print(f"[Deezer Favs] yt-dlp failed: {e}")
+            continue
+
+        m = re.search(r'"(.*\.opus)"', out)
+        if not m:
+            print(f"[Deezer Favs] could not determine filename from: {out}")
+            deezer_downloaded.add(track_id)
+            continue
+
+        result_fn = m.group(1).replace("'", "")
+        sp.check_output(f"chmod a+r '{result_fn}'", shell=True)
+        sp.check_output(f"mv '{result_fn}' '{dest_path}'", shell=True)
+
+        with open(f"{folder}/{playlist_fn}", "a") as f:
+            f.write(fn)
+            f.write("\n")
+
+        print(f"* [Deezer Favs] {fn}")
+        deezer_downloaded.add(track_id)
+
+
 def get_radio_playlist(server_url, username, password):
     """
     Connects to a Subsonic server, finds the 'Radio' playlist, and prints its contents.
@@ -187,6 +269,12 @@ if __name__ == "__main__":
     catcher = SignalCatcher()
     print(f"Connecting to {SUBSONIC_SERVER_URL}")
 
+    last_deezer_check = 0
     while not catcher.interrupted:
         get_radio_playlist(SUBSONIC_SERVER_URL, SUBSONIC_USERNAME, SUBSONIC_PASSWORD)
-        time.sleep(2)
+
+        if DEEZER_USER_ID and time.time() - last_deezer_check >= 60:
+            sync_deezer_favs()
+            last_deezer_check = time.time()
+
+        time.sleep(30)
