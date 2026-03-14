@@ -107,6 +107,8 @@ def download_similar_songs(playlist_title, song: dict):
                 if fails_count > 10:
                     print("too many fails, exiting...")
                     sys.exit(1)
+                else:
+                    continue
 
             m = re.search(r'"(.*\.opus)"', out)
             if not m:
